@@ -191,7 +191,8 @@
     <button class="btn btn-primary btn-small" onclick="parsePastedItems()">Add to receipt</button>
     <div class="paste-status" id="pasteStatus"></div>
     <div style="margin-top:14px; padding-top:14px; border-top:1px solid #3B3732;">
-      <button class="btn btn-ghost btn-small" onclick="startNewReceipt()">Start new receipt</button>
+      <button class="btn btn-primary btn-small" onclick="startNewReceipt(true)">Save & start new</button>
+      <button class="btn btn-ghost btn-small" onclick="startNewReceipt(false)" style="margin-top:8px;">Discard & start new</button>
     </div>
   </div>
 
@@ -336,7 +337,13 @@ function addItem() {
   roomRef.child("items/" + id).set({ name: "", price: 0, assignedTo: {} });
 }
 
-function startNewReceipt() {
+function startNewReceipt(shouldSave) {
+  if (!shouldSave) {
+    if (!confirm("Discard the current receipt without saving it to history?")) return;
+    roomRef.update({ merchant: "", items: null, charges: { tax: 0, tip: 0 }, paid: null });
+    return;
+  }
+
   if (Object.keys(state.items).length === 0) {
     // nothing to save, just clear
     roomRef.update({ merchant: "", items: null, charges: { tax: 0, tip: 0 }, paid: null });
