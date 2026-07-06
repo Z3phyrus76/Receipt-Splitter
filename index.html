@@ -1,414 +1,457 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Happy Birthday Kimie!</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Who Owes What</title>
 <style>
-  :root{
-    --paper:#FBE9EE;
-    --paper-light:#FDF6F2;
-    --rose:#F2A9C0;
-    --rose-deep:#E8607E;
-    --ink:#7A4B5C;
-    --white:#FFFFFF;
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #24211E;
+    background-image: radial-gradient(circle at 20% 10%, #2C2925 0%, #24211E 60%);
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #EDE7DA;
+    padding: 32px 16px 64px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; }
+  .eyebrow {
+    font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: 0.08em;
+    color: #C1443C; margin-bottom: 6px;
+  }
+  h1 { font-family: 'Space Mono', monospace; font-size: 28px; margin: 0 0 6px; color: #FBF8F1; }
+  .sub { color: #A9A296; font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
+
+  .card {
+    background: #2C2925; border: 1px solid #3B3732; border-radius: 14px;
+    padding: 18px; margin-bottom: 16px;
+  }
+  .h2 { font-family: 'Space Mono', monospace; font-size: 14px; margin: 0 0 12px; color: #FBF8F1; }
+
+  .link-row {
+    display: flex; gap: 8px; align-items: center; background: #24211E;
+    border: 1px solid #3B3732; border-radius: 8px; padding: 8px 10px; font-size: 12.5px;
+    color: #A9A296; overflow: hidden;
+  }
+  .link-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+  .btn {
+    border: none; border-radius: 999px; padding: 11px 18px; font-family: 'Inter', sans-serif;
+    font-weight: 600; font-size: 14px; cursor: pointer; width: 100%;
+  }
+  .btn-primary { background: #C1443C; color: #FBF8F1; }
+  .btn-ghost { background: transparent; color: #A9A296; border: 1px solid #3B3732; }
+  .btn-small { width: auto; padding: 7px 14px; font-size: 12.5px; }
+
+  .input, select {
+    background: #24211E; border: 1px solid #3B3732; border-radius: 8px;
+    padding: 9px 11px; color: #FBF8F1; font-size: 14px; font-family: 'Inter', sans-serif;
   }
 
-  *{box-sizing:border-box;}
-
-  html, body{
-    height:100%;
+  .whoami { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .who-btn {
+    border: 1px solid #3B3732; background: #24211E; color: #A9A296;
+    padding: 7px 12px; border-radius: 999px; font-size: 13px; cursor: pointer;
   }
+  .who-btn.active { background: var(--c); border-color: var(--c); color: #23201B; font-weight: 700; }
 
-  body{
-    margin:0;
-    min-height:100vh;
-    background:var(--paper);
-    background-image:
-      linear-gradient(rgba(255,255,255,.35) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,.35) 1px, transparent 1px);
-    background-size:28px 28px;
-    font-family:'Quicksand', sans-serif;
-    color:var(--ink);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:flex-start;
-    gap:clamp(4px, 1vh, 16px);
-    padding:32px 16px 24px;
-    overflow-x:hidden;
-    -webkit-tap-highlight-color:transparent;
+  .people-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .person-tag {
+    display: flex; align-items: center; gap: 6px;
+    background: color-mix(in srgb, var(--c) 22%, #2C2925);
+    border: 1px solid var(--c); color: #FBF8F1;
+    padding: 6px 10px; border-radius: 999px; font-size: 13px;
   }
-
-  @media (prefers-reduced-motion: reduce){
-    *{ transition-duration:.01ms !important; animation-duration:.01ms !important; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); display: inline-block; }
+  .payer-badge {
+    font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .04em;
+    background: #C1443C; color: #FBF8F1; padding: 2px 6px; border-radius: 6px;
   }
-
-  .title-wrap{
-    text-align:center;
-    margin-bottom:0;
+  .paid-badge {
+    font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: .04em;
+    background: #6FAE7C; color: #10250F; padding: 2px 6px; border-radius: 6px;
   }
+  .x-btn { background: none; border: none; color: #A9A296; cursor: pointer; font-size: 14px; padding: 0 0 0 2px; }
 
-  .title{
-    font-family:'Fredoka', sans-serif;
-    font-weight:700;
-    font-size:clamp(2.2rem, 9vw, 4.4rem);
-    color:var(--white);
-    -webkit-text-stroke:clamp(3px, 0.9vw, 6px) var(--rose-deep);
-    paint-order:stroke fill;
-    letter-spacing:1px;
-    margin:0;
-    line-height:1.1;
+  .add-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .add-row .input { flex: 1; }
+
+  .payer-select { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #A9A296; margin-top: 6px; }
+
+  .receipt-wrap { max-width: 420px; margin: 0 auto 20px; }
+  .receipt {
+    background: #FBF8F1; color: #23201B; padding: 22px 20px 6px; border-radius: 4px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35); transform: rotate(-0.5deg);
+    font-family: 'Space Mono', monospace; position: relative;
   }
-
-  .subtitle{
-    font-size:1rem;
-    font-weight:600;
-    color:var(--ink);
-    opacity:.75;
-    margin:10px 0 0;
+  .merchant-input {
+    width: 100%; text-align: center; font-weight: 700; letter-spacing: .06em; font-size: 14px;
+    text-transform: uppercase; border: none; background: transparent; font-family: 'Space Mono', monospace;
+    color: #23201B;
   }
-
-  .stage{
-    position:relative;
-    width:min(96vw, 520px);
-    height:min(70vw, 520px);
-    margin-top:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+  .rline { border-bottom: 1px dashed #C9C2AF; margin: 10px 0; }
+  .item-block { margin-bottom: 10px; }
+  .item-row { display: flex; align-items: center; gap: 4px; }
+  .item-name { background: transparent; border: none; font-family: 'Space Mono', monospace; font-size: 13px; color: #23201B; width: 42%; padding: 2px 0; }
+  .dots { flex: 1; border-bottom: 1px dotted #B7AF98; margin: 0 4px; height: 1px; transform: translateY(-5px); }
+  .price-sign { font-size: 13px; color: #6B6455; }
+  .item-price { background: transparent; border: none; font-family: 'Space Mono', monospace; font-size: 13px; color: #23201B; width: 56px; text-align: right; padding: 2px 0; }
+  .item-remove { background: none; border: none; color: #B7AF98; font-size: 14px; cursor: pointer; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .needs-assign { padding: 4px; background: rgba(193,68,60,.07); border-radius: 6px; }
+  .person-chip {
+    font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+    border: 1px solid #D9D2BE; background: transparent; color: #8A8272;
+    padding: 4px 9px; border-radius: 999px; cursor: pointer;
   }
+  .person-chip.active { background: var(--c); border-color: var(--c); color: #23201B; }
+  .add-item-btn { background: none; border: none; color: #8A8272; font-family: 'Space Mono', monospace; font-size: 12px; cursor: pointer; padding: 6px 0 10px; }
 
-  .pivot-heart{
-    position:absolute;
-    bottom:5%;
-    left:50%;
-    transform:translateX(-50%);
-    width:18%;
-    height:18%;
-    z-index:1;
+  .totals-row { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: #6B6455; margin-bottom: 6px; gap: 8px;}
+  .totals-row input { width: 70px; text-align: right; background: transparent; border: none; border-bottom: 1px dotted #B7AF98; font-family: 'Space Mono', monospace; font-size: 12.5px; color: #23201B; }
+  .grand { color: #23201B; font-weight: 700; font-size: 14px; margin-top: 6px; }
+  .perforation {
+    height: 14px; margin: 0 -20px;
+    background-image: linear-gradient(135deg, transparent 50%, #24211E 50%), linear-gradient(-135deg, transparent 50%, #24211E 50%);
+    background-size: 16px 16px; background-repeat: repeat-x; background-position: bottom;
   }
 
-  .card{
-    position:absolute;
-    bottom:4%;
-    left:50%;
-    width:42%;
-    height:42%;
-    background:var(--white);
-    border-radius:20px;
-    box-shadow:0 8px 18px rgba(122,75,92,.28);
-    transform-origin:50% 100%;
-    transition:transform .55s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease, z-index 0s;
-    border:2px dashed rgba(232,96,126,.55);
-    overflow:hidden;
-  }
+  .warning { font-size: 12.5px; color: #E8B14A; background: rgba(232,177,74,.1); border: 1px solid rgba(232,177,74,.3); padding: 8px 10px; border-radius: 8px; margin-bottom: 12px; }
+  .owe-row { display: flex; align-items: center; gap: 8px; font-size: 13.5px; background: #24211E; border: 1px solid #3B3732; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+  .owe-name { font-weight: 600; }
+  .owe-arrow { color: #A9A296; font-size: 12px; flex: 1; }
+  .owe-amount { font-family: 'Space Mono', monospace; font-weight: 700; color: #FBF8F1; }
+  .paid-toggle { border: 1px solid #3B3732; background: #2C2925; color: #A9A296; border-radius: 999px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+  .paid-toggle.on { background: #6FAE7C; color: #10250F; border-color: #6FAE7C; font-weight: 700; }
 
-  .card-inner{
-    position:absolute;
-    inset:6px;
-    border-radius:13px;
-    background:var(--rose);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
-  }
-
-  .card-inner img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    display:block;
-    pointer-events:none;
-  }
-
-  .card-inner .fallback{
-    font-size:2.6rem;
-    line-height:1;
-  }
-
-  .card-inner .spinner{
-    width:22px;
-    height:22px;
-    border:3px solid rgba(122,75,92,.25);
-    border-top-color:var(--rose-deep);
-    border-radius:50%;
-    animation:spin .8s linear infinite;
-  }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
-
-  .hint{
-    margin-top:18px;
-    font-weight:600;
-    font-size:.92rem;
-    color:var(--ink);
-    opacity:.7;
-    text-align:center;
-    min-height:1.4em;
-  }
-
-  .note-overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(122,75,92,.35);
-    backdrop-filter:blur(2px);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .35s ease;
-    z-index:10;
-  }
-  .note-overlay.show{
-    opacity:1;
-    pointer-events:auto;
-  }
-
-  .note-card{
-    background:var(--paper-light);
-    border-radius:22px;
-    padding:34px 28px;
-    max-width:340px;
-    width:100%;
-    text-align:center;
-    box-shadow:0 18px 40px rgba(122,75,92,.35);
-    border:2px dashed var(--rose-deep);
-    transform:scale(.85) translateY(10px);
-    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
-  }
-  .note-overlay.show .note-card{
-    transform:scale(1) translateY(0);
-  }
-
-  .note-heart{
-    width:48px;
-    height:48px;
-    margin:0 auto 12px;
-  }
-
-  .note-title{
-    font-family:'Fredoka', sans-serif;
-    font-weight:600;
-    font-size:1.5rem;
-    color:var(--rose-deep);
-    margin:0 0 12px;
-  }
-
-  .note-body{
-    font-size:1rem;
-    line-height:1.55;
-    color:var(--ink);
-    margin:0 0 22px;
-    white-space:pre-line;
-  }
-
-  .note-close{
-    font-family:'Quicksand', sans-serif;
-    font-weight:700;
-    font-size:.95rem;
-    color:var(--white);
-    background:var(--rose-deep);
-    border:none;
-    border-radius:999px;
-    padding:11px 26px;
-    cursor:pointer;
-    transition:transform .15s ease, opacity .15s ease;
-  }
-  .note-close:active{
-    transform:scale(.96);
-  }
-  .note-close:focus-visible, .card:focus-visible{
-    outline:3px solid var(--rose-deep);
-    outline-offset:2px;
-  }
-
-  footer{
-    font-size:.78rem;
-    color:var(--ink);
-    opacity:.45;
-    text-align:center;
-  }
+  .status-line { font-size: 12px; color: #8A8272; text-align: center; margin-top: 24px; }
 </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="eyebrow">// split the tab</div>
+  <h1>Who Owes What</h1>
+  <p class="sub">Everyone taps their own name, checks off what they had, and marks themselves paid. Updates live for the whole group.</p>
 
-  <div class="title-wrap">
-    <h1 class="title">Happy Birthday Kimie!</h1>
+  <div class="card">
+    <div class="h2">Share this link</div>
+    <div class="link-row"><span id="shareLink">loading…</span></div>
+    <br/>
+    <button class="btn btn-ghost btn-small" onclick="copyLink()">Copy link</button>
   </div>
 
-  <div class="stage" id="stage">
-    <svg class="pivot-heart" viewBox="0 0 64 64" aria-hidden="true">
-      <path d="M32 54 C12 40 4 28 4 18 C4 8 12 2 20 2 C26 2 30 6 32 11 C34 6 38 2 44 2 C52 2 60 8 60 18 C60 28 52 40 32 54 Z"
-            fill="#E8607E" stroke="#7A4B5C" stroke-width="2" stroke-dasharray="3 3"/>
-    </svg>
-    <!-- cards injected by JS -->
-  </div>
-
-  <p class="hint" id="hint">Sending Birthday Wishes 🩷</p>
-
-  <div class="note-overlay" id="noteOverlay">
-    <div class="note-card">
-      <svg class="note-heart" viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M32 54 C12 40 4 28 4 18 C4 8 12 2 20 2 C26 2 30 6 32 11 C34 6 38 2 44 2 C52 2 60 8 60 18 C60 28 52 40 32 54 Z"
-              fill="#E8607E" stroke="#7A4B5C" stroke-width="2" stroke-dasharray="3 3"/>
-      </svg>
-      <h2 class="note-title">Happy Birthday Kimie!</h2>
-      <p class="note-body" id="noteBody">Happy Birthday Kimie! I hope you are loved the way you deserve to be loved. I wish you a great day, and I'm so glad I met you.</p>
-      <button class="note-close" id="noteClose">close</button>
+  <div class="card">
+    <div class="h2">Who are you?</div>
+    <div class="whoami" id="whoami"></div>
+    <div class="add-row">
+      <input class="input" id="newPersonName" placeholder="Add your name" onkeydown="if(event.key==='Enter') addPerson()"/>
+      <button class="btn btn-primary btn-small" onclick="addPerson()">Add</button>
+    </div>
+    <div class="people-list" id="peopleList"></div>
+    <div class="payer-select">
+      <span>Who paid the bill?</span>
+      <select id="payerSelect" onchange="setPayer(this.value)"></select>
     </div>
   </div>
 
-  <footer>Made with care, one card at a time</footer>
+  <div class="receipt-wrap">
+    <div class="receipt">
+      <input class="merchant-input" id="merchantInput" placeholder="RECEIPT" onchange="setMerchant(this.value)"/>
+      <div class="rline"></div>
+      <div id="itemsContainer"></div>
+      <button class="add-item-btn" onclick="addItem()">+ add item</button>
+      <div class="rline"></div>
+      <div class="totals-row"><span>subtotal</span><span id="subtotalDisplay">$0.00</span></div>
+      <div class="totals-row"><span>tax</span><input type="number" step="0.01" id="taxInput" onchange="setCharge('tax', this.value)"/></div>
+      <div class="totals-row"><span>tip</span><input type="number" step="0.01" id="tipInput" onchange="setCharge('tip', this.value)"/></div>
+      <div class="totals-row grand"><span>total</span><span id="totalDisplay">$0.00</span></div>
+      <div class="perforation"></div>
+    </div>
+  </div>
 
+  <div class="card">
+    <div class="h2">Settle up</div>
+    <div id="warningBox"></div>
+    <div id="oweList"></div>
+  </div>
+
+  <div class="status-line" id="statusLine">connecting…</div>
+</div>
+
+<!-- ===== Firebase (fill in your config below) ===== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-// =====================================================================
-// 🐻 CUTE GIFS — self-hosted in /gifs 🐻
-// -----------------------------------------------------------------------
-// These point at GIF files you uploaded into a "gifs" folder next to
-// this index.html in your GitHub repo. Loads instantly, no hotlinking
-// issues. To swap one out, just replace the filename string below.
-// =====================================================================
-const GIF_FILES = [
-  "gifs/wave-hi.gif",
-  "gifs/holding-hands.gif",
-  "gifs/play-fight.gif",
-  "gifs/flowers.gif",
-  "gifs/kiss.gif",
-  "gifs/hug.gif"
-];
-const CARD_COUNT = GIF_FILES.length;
-const fallbackEmoji = new Array(CARD_COUNT).fill("🐻");
+// 1. Paste your Firebase project config here (from Firebase Console > Project Settings)
+const firebaseConfig = {
+  apiKey: "AIzaSyAfQObWZTLW1uUaMMFdWqNivi-A7V7i8hY",
+  authDomain: "receipt-splitter-ba692.firebaseapp.com",
+  databaseURL: "https://receipt-splitter-ba692-default-rtdb.firebaseio.com",
+  projectId: "receipt-splitter-ba692",
+  storageBucket: "receipt-splitter-ba692.firebasestorage.app",
+  messagingSenderId: "70749247350",
+  appId: "1:70749247350:web:88c08038d1960970a90c57",
+  measurementId: "G-27YS1PX6BB"
+};
 
-const stage = document.getElementById('stage');
-const hint = document.getElementById('hint');
-const noteOverlay = document.getElementById('noteOverlay');
-const noteClose = document.getElementById('noteClose');
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-const N = CARD_COUNT;
-const spreadAngle = 64; // total degrees the fan spans
-const startAngle = -spreadAngle / 2;
-const step = spreadAngle / (N - 1);
+const PALETTE = ["#F5E663","#8FE3C4","#FFAFC5","#9AD1FF","#FFC38A","#C9B8FF","#B8E986","#F7B2E0"];
 
-let order = Array.from({length:N}, (_, i) => i); // current visual order, index 0 = front/top card
-let cyclesCompleted = 0;
+// ---- room handling ----
+const params = new URLSearchParams(location.search);
+let roomId = params.get("room");
+if (!roomId) {
+  roomId = Math.random().toString(36).slice(2, 8).toUpperCase();
+  params.set("room", roomId);
+  history.replaceState(null, "", location.pathname + "?" + params.toString());
+}
+document.getElementById("shareLink").textContent = location.href;
 
-// persistent card elements, one per GIF, created once and reused forever
-// (so GIFs never restart and non-moving cards never "jump")
-const cardEls = GIF_FILES.map((_, i) => {
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.innerHTML = `<div class="card-inner">${cardContent(i)}</div>`;
-  return card;
+function copyLink() {
+  navigator.clipboard.writeText(location.href);
+  const el = document.getElementById("shareLink");
+  const old = el.textContent;
+  el.textContent = "Copied!";
+  setTimeout(() => (el.textContent = old), 1200);
+}
+
+// who am I (remembered per browser)
+let myId = localStorage.getItem("rs_myid_" + roomId) || null;
+
+const roomRef = db.ref("rooms/" + roomId);
+let state = { merchant: "", items: {}, people: {}, payerId: "", charges: { tax: 0, tip: 0 }, paid: {} };
+
+roomRef.on("value", (snap) => {
+  const val = snap.val() || {};
+  state = {
+    merchant: val.merchant || "",
+    items: val.items || {},
+    people: val.people || {},
+    payerId: val.payerId || "",
+    charges: val.charges || { tax: 0, tip: 0 },
+    paid: val.paid || {},
+  };
+  document.getElementById("statusLine").textContent = "live · room " + roomId;
+  render();
 });
 
-function cardContent(i){
-  const file = GIF_FILES[i];
-  const emoji = fallbackEmoji[i % fallbackEmoji.length];
-  if(!file){
-    return `<span class="fallback">${emoji}</span>`;
+function addPerson() {
+  const nameInput = document.getElementById("newPersonName");
+  const name = nameInput.value.trim();
+  if (!name) return;
+  const id = db.ref().push().key;
+  const color = PALETTE[Object.keys(state.people).length % PALETTE.length];
+  roomRef.child("people/" + id).set({ name, color });
+  myId = id;
+  localStorage.setItem("rs_myid_" + roomId, id);
+  nameInput.value = "";
+  if (!state.payerId) roomRef.child("payerId").set(id);
+}
+
+function removePerson(id) {
+  roomRef.child("people/" + id).remove();
+  const updates = {};
+  Object.keys(state.items).forEach((itemId) => {
+    updates["items/" + itemId + "/assignedTo/" + id] = null;
+  });
+  roomRef.update(updates);
+  roomRef.child("paid/" + id).remove();
+}
+
+function pickMe(id) {
+  myId = id;
+  localStorage.setItem("rs_myid_" + roomId, id);
+  render();
+}
+
+function setPayer(id) {
+  roomRef.child("payerId").set(id);
+}
+
+function setMerchant(val) {
+  roomRef.child("merchant").set(val);
+}
+
+function setCharge(key, val) {
+  roomRef.child("charges/" + key).set(parseFloat(val) || 0);
+}
+
+function addItem() {
+  const id = db.ref().push().key;
+  roomRef.child("items/" + id).set({ name: "", price: 0, assignedTo: {} });
+}
+
+function updateItemField(id, field, val) {
+  roomRef.child("items/" + id + "/" + field).set(field === "price" ? (parseFloat(val) || 0) : val);
+}
+
+function removeItem(id) {
+  roomRef.child("items/" + id).remove();
+}
+
+function toggleAssign(itemId, personId) {
+  const current = (state.items[itemId] && state.items[itemId].assignedTo) || {};
+  if (current[personId]) {
+    roomRef.child("items/" + itemId + "/assignedTo/" + personId).remove();
+  } else {
+    roomRef.child("items/" + itemId + "/assignedTo/" + personId).set(true);
   }
-  return `<img src="${file}" alt="cute animal gif" loading="lazy" onerror="this.outerHTML='<span class=&quot;fallback&quot;>${emoji}</span>'">`;
 }
 
-function positionCard(card, pos, withTransition){
-  const angle = startAngle + pos * step;
-  const z = N - pos;
-  card.style.transition = withTransition
-    ? 'transform .5s cubic-bezier(.34,1.56,.64,1), opacity .35s ease'
-    : 'none';
-  card.style.zIndex = z;
-  card.style.opacity = '1';
-  card.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+function togglePaid(personId) {
+  const isPaid = !!state.paid[personId];
+  roomRef.child("paid/" + personId).set(!isPaid);
 }
 
-function buildCards(){
-  // initial placement only — attaches each card once, in its starting slot
-  cardEls.forEach(c => stage.appendChild(c));
-  order.forEach((slotIndex, pos) => {
-    positionCard(cardEls[slotIndex], pos, false);
-  });
-}
-
-let rotating = false;
-function rotateOnce(){
-  if(rotating) return;
-  rotating = true;
-
-  const leavingSlotIndex = order[0];
-  const leavingCard = cardEls[leavingSlotIndex];
-
-  // animate the front card flying up and out
-  leavingCard.style.transition = 'transform .4s ease-in, opacity .3s ease-in';
-  leavingCard.style.transform += ' translateY(-30px) scale(.85)';
-  leavingCard.style.opacity = '0';
-  leavingCard.style.zIndex = N + 1; // stay on top while it flies away
-
-  // meanwhile, every other card eases into its new angle right away —
-  // nothing is removed or recreated, so GIFs keep playing uninterrupted
-  order.slice(1).forEach((slotIndex, idx) => {
-    positionCard(cardEls[slotIndex], idx, true);
-  });
-
-  setTimeout(() => {
-    order.push(order.shift());
-    // bring the card back in at the rear of the fan
-    leavingCard.style.transition = 'none';
-    positionCard(leavingCard, N - 1, false);
-    leavingCard.style.opacity = '0';
-    leavingCard.style.transform += ' translateY(-20px) scale(.85)';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        positionCard(leavingCard, N - 1, true);
-      });
+function computeSummary() {
+  const items = Object.entries(state.items).map(([id, it]) => ({ id, ...it, assignedTo: it.assignedTo || {} }));
+  const itemSubtotal = items.reduce((s, it) => s + (parseFloat(it.price) || 0), 0);
+  const extra = (parseFloat(state.charges.tax) || 0) + (parseFloat(state.charges.tip) || 0);
+  const perPerson = {};
+  Object.keys(state.people).forEach((pid) => (perPerson[pid] = 0));
+  items.forEach((it) => {
+    const assignedIds = Object.keys(it.assignedTo).filter((k) => it.assignedTo[k]);
+    if (assignedIds.length === 0) return;
+    const share = (parseFloat(it.price) || 0) / assignedIds.length;
+    assignedIds.forEach((pid) => {
+      if (perPerson[pid] !== undefined) perPerson[pid] += share;
     });
-    rotating = false;
-    checkCycle();
-  }, 260);
+  });
+  const base = itemSubtotal > 0 ? itemSubtotal : 1;
+  Object.keys(perPerson).forEach((pid) => {
+    const ratio = itemSubtotal > 0 ? perPerson[pid] / base : 0;
+    perPerson[pid] += ratio * extra;
+  });
+  const unassigned = items.filter((it) => Object.keys(it.assignedTo).filter((k) => it.assignedTo[k]).length === 0).length;
+  return { itemSubtotal, extra, perPerson, unassigned };
 }
 
-function checkCycle(){
-  const isOriginal = order.every((v, i) => v === i);
-  if(isOriginal){
-    cyclesCompleted++;
-    if(cyclesCompleted === 1){
-      hint.textContent = 'Happy Birthday, Kimie! 🎉';
-      stopAutoRotate();
-      setTimeout(() => noteOverlay.classList.add('show'), 350);
-    }
+function render() {
+  // who am I picker
+  const whoami = document.getElementById("whoami");
+  whoami.innerHTML = "";
+  Object.entries(state.people).forEach(([id, p]) => {
+    const btn = document.createElement("button");
+    btn.className = "who-btn" + (id === myId ? " active" : "");
+    btn.style.setProperty("--c", p.color);
+    btn.textContent = p.name;
+    btn.onclick = () => pickMe(id);
+    whoami.appendChild(btn);
+  });
+
+  // people list
+  const peopleList = document.getElementById("peopleList");
+  peopleList.innerHTML = "";
+  Object.entries(state.people).forEach(([id, p]) => {
+    const tag = document.createElement("div");
+    tag.className = "person-tag";
+    tag.style.setProperty("--c", p.color);
+    tag.innerHTML = `<span class="dot"></span>${escapeHtml(p.name)}` +
+      (id === state.payerId ? `<span class="payer-badge">paid</span>` : "") +
+      (state.paid[id] ? `<span class="paid-badge">settled</span>` : "") +
+      `<button class="x-btn" onclick="removePerson('${id}')">×</button>`;
+    peopleList.appendChild(tag);
+  });
+
+  // payer select
+  const payerSelect = document.getElementById("payerSelect");
+  payerSelect.innerHTML = "";
+  Object.entries(state.people).forEach(([id, p]) => {
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = p.name;
+    if (id === state.payerId) opt.selected = true;
+    payerSelect.appendChild(opt);
+  });
+
+  // merchant
+  const merchantInput = document.getElementById("merchantInput");
+  if (document.activeElement !== merchantInput) merchantInput.value = state.merchant;
+
+  // items
+  const itemsContainer = document.getElementById("itemsContainer");
+  itemsContainer.innerHTML = "";
+  Object.entries(state.items).forEach(([id, it]) => {
+    const assignedTo = it.assignedTo || {};
+    const block = document.createElement("div");
+    block.className = "item-block";
+    const assignedCount = Object.values(assignedTo).filter(Boolean).length;
+
+    const row = document.createElement("div");
+    row.className = "item-row";
+    row.innerHTML = `
+      <input class="item-name" placeholder="item name" value="${escapeAttr(it.name || "")}" />
+      <span class="dots"></span>
+      <span class="price-sign">$</span>
+      <input class="item-price" type="number" step="0.01" value="${it.price || 0}" />
+      <button class="item-remove" onclick="removeItem('${id}')">×</button>
+    `;
+    const nameInput = row.querySelector(".item-name");
+    const priceInput = row.querySelector(".item-price");
+    nameInput.onchange = () => updateItemField(id, "name", nameInput.value);
+    priceInput.onchange = () => updateItemField(id, "price", priceInput.value);
+    block.appendChild(row);
+
+    const chipRow = document.createElement("div");
+    chipRow.className = "chip-row" + (assignedCount === 0 ? " needs-assign" : "");
+    Object.entries(state.people).forEach(([pid, p]) => {
+      const chip = document.createElement("button");
+      const active = !!assignedTo[pid];
+      chip.className = "person-chip" + (active ? " active" : "");
+      chip.style.setProperty("--c", p.color);
+      chip.textContent = p.name;
+      chip.onclick = () => toggleAssign(id, pid);
+      chipRow.appendChild(chip);
+    });
+    block.appendChild(chipRow);
+    itemsContainer.appendChild(block);
+  });
+
+  const { itemSubtotal, extra, perPerson, unassigned } = computeSummary();
+  document.getElementById("subtotalDisplay").textContent = "$" + itemSubtotal.toFixed(2);
+  document.getElementById("totalDisplay").textContent = "$" + (itemSubtotal + extra).toFixed(2);
+  const taxInput = document.getElementById("taxInput");
+  const tipInput = document.getElementById("tipInput");
+  if (document.activeElement !== taxInput) taxInput.value = state.charges.tax || 0;
+  if (document.activeElement !== tipInput) tipInput.value = state.charges.tip || 0;
+
+  // summary
+  const warningBox = document.getElementById("warningBox");
+  warningBox.innerHTML = unassigned > 0
+    ? `<div class="warning">${unassigned} item${unassigned > 1 ? "s" : ""} not assigned yet — tap a name under each item.</div>`
+    : "";
+
+  const oweList = document.getElementById("oweList");
+  oweList.innerHTML = "";
+  const payer = state.people[state.payerId];
+  if (payer) {
+    Object.entries(state.people).forEach(([pid, p]) => {
+      if (pid === state.payerId) return;
+      const amount = perPerson[pid] || 0;
+      const isPaid = !!state.paid[pid];
+      const row = document.createElement("div");
+      row.className = "owe-row";
+      row.innerHTML = `
+        <span class="dot" style="background:${p.color}"></span>
+        <span class="owe-name">${escapeHtml(p.name)}</span>
+        <span class="owe-arrow">owes ${escapeHtml(payer.name)}</span>
+        <span class="owe-amount">$${amount.toFixed(2)}</span>
+        <button class="paid-toggle ${isPaid ? "on" : ""}" onclick="togglePaid('${pid}')">${isPaid ? "Paid" : "Mark paid"}</button>
+      `;
+      oweList.appendChild(row);
+    });
   }
 }
 
-noteClose.addEventListener('click', () => {
-  noteOverlay.classList.remove('show');
-  hint.textContent = 'Sending Birthday Wishes 🩷';
-  startAutoRotate();
-});
-noteOverlay.addEventListener('click', e => {
-  if(e.target === noteOverlay){
-    noteOverlay.classList.remove('show');
-    hint.textContent = 'Sending Birthday Wishes 🩷';
-    startAutoRotate();
-  }
-});
-
-function startAutoRotate(){
-  if(rotateTimer) return;
-  rotateTimer = setInterval(rotateOnce, 2200);
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
-function stopAutoRotate(){
-  clearInterval(rotateTimer);
-  rotateTimer = null;
-}
-let rotateTimer = null;
-
-buildCards();
-hint.textContent = 'Sending Birthday Wishes 🩷';
-startAutoRotate();
+function escapeAttr(s) { return escapeHtml(s); }
 </script>
 </body>
 </html>
