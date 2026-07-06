@@ -110,23 +110,6 @@
   .person-chip.active { background: var(--c); border-color: var(--c); color: #23201B; }
   .add-item-btn { background: none; border: none; color: #8A8272; font-family: 'Space Mono', monospace; font-size: 12px; cursor: pointer; padding: 6px 0 10px; }
 
-  .paste-box {
-    width: 100%; background: #24211E; border: 1px solid #3B3732; border-radius: 8px;
-    color: #FBF8F1; font-family: 'Space Mono', monospace; font-size: 12.5px;
-    padding: 10px 12px; resize: vertical; min-height: 90px; margin-bottom: 10px;
-  }
-  .paste-hint { font-size: 12.5px; color: #A9A296; margin: 0 0 10px; line-height: 1.5; }
-  .paste-hint code {
-    background: #24211E; border: 1px solid #3B3732; border-radius: 4px; padding: 1px 5px;
-    font-size: 11.5px; color: #C9C2AF;
-  }
-  .paste-status { font-size: 12.5px; color: #6FAE7C; margin: 8px 0 0; min-height: 16px; }
-  .prompt-box {
-    background: #24211E; border: 1px solid #3B3732; border-radius: 8px; padding: 10px 12px;
-    font-family: 'Space Mono', monospace; font-size: 11.5px; color: #A9A296; line-height: 1.6;
-    margin-bottom: 10px; white-space: pre-wrap;
-  }
-
   .totals-row { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: #6B6455; margin-bottom: 6px; gap: 8px;}
   .totals-row input { width: 70px; text-align: right; background: transparent; border: none; border-bottom: 1px dotted #B7AF98; font-family: 'Space Mono', monospace; font-size: 12.5px; color: #23201B; }
   .grand { color: #23201B; font-weight: 700; font-size: 14px; margin-top: 6px; }
@@ -169,27 +152,6 @@
       <button class="btn btn-primary btn-small" onclick="addPerson()">Add</button>
     </div>
     <div class="people-list" id="peopleList"></div>
-    <div class="payer-select">
-      <span>Who paid the bill?</span>
-      <select id="payerSelect" onchange="setPayer(this.value)"></select>
-    </div>
-  </div>
-
-  <div class="card" id="pasteCard">
-    <div class="h2">Add items from Claude or ChatGPT</div>
-    <p class="paste-hint">Upload the receipt photo to Claude or ChatGPT with this prompt, then paste what it gives back below:</p>
-    <div class="prompt-box" id="promptBox">List every item on this receipt with its price, one per line, in exactly this format:
-Item Name - $12.34
-
-Then add these lines at the end if shown on the receipt:
-Tax - $1.20
-Tip - $3.00
-
-Output only those lines, nothing else.</div>
-    <button class="btn btn-ghost btn-small" onclick="copyPrompt()" style="margin-bottom:10px;">Copy prompt</button>
-    <textarea class="paste-box" id="pasteBox" placeholder="Paste the item list here..."></textarea>
-    <button class="btn btn-primary btn-small" onclick="parsePastedItems()">Add to receipt</button>
-    <div class="paste-status" id="pasteStatus"></div>
   </div>
 
   <div class="receipt-wrap">
@@ -273,10 +235,10 @@ roomRef.on("value", (snap) => {
   };
 
   // Edris is always the payer — seed him in if he's not there yet
-  if (!state.people[PAYER_ID] || !state.payerId) {
+  if (!state.people[PAYER_ID] || state.payerId !== PAYER_ID) {
     const seedUpdates = {};
     if (!state.people[PAYER_ID]) seedUpdates["people/" + PAYER_ID] = { name: "Edris", color: PALETTE[0] };
-    if (!state.payerId) seedUpdates["payerId"] = PAYER_ID;
+    seedUpdates["payerId"] = PAYER_ID;
     roomRef.update(seedUpdates);
   }
 
@@ -294,7 +256,6 @@ function addPerson() {
   myId = id;
   localStorage.setItem("rs_myid_" + roomId, id);
   nameInput.value = "";
-  if (!state.payerId) roomRef.child("payerId").set(id);
 }
 
 function removePerson(id) {
@@ -313,10 +274,6 @@ function pickMe(id) {
   render();
 }
 
-function setPayer(id) {
-  roomRef.child("payerId").set(id);
-}
-
 function setMerchant(val) {
   roomRef.child("merchant").set(val);
 }
@@ -328,63 +285,6 @@ function setCharge(key, val) {
 function addItem() {
   const id = db.ref().push().key;
   roomRef.child("items/" + id).set({ name: "", price: 0, assignedTo: {} });
-}
-
-function copyPrompt() {
-  const text = document.getElementById("promptBox").textContent;
-  navigator.clipboard.writeText(text);
-  const status = document.getElementById("pasteStatus");
-  status.textContent = "Prompt copied — paste it alongside the receipt photo.";
-  setTimeout(() => (status.textContent = ""), 3000);
-}
-
-function parsePastedItems() {
-  const raw = document.getElementById("pasteBox").value;
-  const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
-  const updates = {};
-  let itemCount = 0;
-  let foundTax = null;
-  let foundTip = null;
-
-  lines.forEach((line) => {
-    // matches "Name - $12.34", "Name: 12.34", "Name — $12.34", etc.
-    const match = line.match(/^(.+?)[\s:\-–—]+\$?\s*([\d,]+\.\d{1,2}|\d+)\s*$/);
-    if (!match) return;
-    const label = match[1].trim().replace(/[:\-–—]+$/, "").trim();
-    const price = parseFloat(match[2].replace(/,/g, ""));
-    if (isNaN(price)) return;
-
-    const lower = label.toLowerCase();
-    if (lower === "tax") {
-      foundTax = price;
-    } else if (lower === "tip" || lower === "gratuity") {
-      foundTip = price;
-    } else if (lower === "subtotal" || lower === "total") {
-      // skip — these are derived on the site, not stored directly
-    } else {
-      const id = db.ref().push().key;
-      updates["items/" + id] = { name: label, price, assignedTo: {} };
-      itemCount++;
-    }
-  });
-
-  if (foundTax !== null) updates["charges/tax"] = foundTax;
-  if (foundTip !== null) updates["charges/tip"] = foundTip;
-
-  const status = document.getElementById("pasteStatus");
-  if (itemCount === 0 && foundTax === null && foundTip === null) {
-    status.style.color = "#E8B14A";
-    status.textContent = "Couldn't find any lines in that format — check it matches \"Item - $Price\".";
-    return;
-  }
-
-  roomRef.update(updates);
-  document.getElementById("pasteBox").value = "";
-  status.style.color = "#6FAE7C";
-  status.textContent = `Added ${itemCount} item${itemCount === 1 ? "" : "s"}` +
-    (foundTax !== null ? `, tax $${foundTax.toFixed(2)}` : "") +
-    (foundTip !== null ? `, tip $${foundTip.toFixed(2)}` : "") + ".";
-  setTimeout(() => (status.textContent = ""), 4000);
 }
 
 function updateItemField(id, field, val) {
@@ -433,10 +333,6 @@ function computeSummary() {
 }
 
 function render() {
-  // only Edris (the payer) sees the paste-items tool
-  const pasteCard = document.getElementById("pasteCard");
-  pasteCard.style.display = myId === PAYER_ID ? "" : "none";
-
   // who am I picker
   const whoami = document.getElementById("whoami");
   whoami.innerHTML = "";
@@ -461,17 +357,6 @@ function render() {
       (state.paid[id] ? `<span class="paid-badge">settled</span>` : "") +
       `<button class="x-btn" onclick="removePerson('${id}')">×</button>`;
     peopleList.appendChild(tag);
-  });
-
-  // payer select
-  const payerSelect = document.getElementById("payerSelect");
-  payerSelect.innerHTML = "";
-  Object.entries(state.people).forEach(([id, p]) => {
-    const opt = document.createElement("option");
-    opt.value = id;
-    opt.textContent = p.name;
-    if (id === state.payerId) opt.selected = true;
-    payerSelect.appendChild(opt);
   });
 
   // merchant
