@@ -333,6 +333,23 @@ function parsePastedItems() {
   let foundTip = null;
 
   lines.forEach((line) => {
+    // matches "Name × 2 - $45.90" or "Name x2 - $45.90" — split into N separate items
+    const qtyMatch = line.match(/^(.+?)\s*[×xX]\s*(\d+)\s*[\s:\-–—]+\$?\s*([\d,]+\.\d{1,2}|\d+)\s*$/);
+    if (qtyMatch) {
+      const label = qtyMatch[1].trim();
+      const qty = parseInt(qtyMatch[2], 10);
+      const totalPrice = parseFloat(qtyMatch[3].replace(/,/g, ""));
+      if (qty > 0 && !isNaN(totalPrice)) {
+        const unitPrice = Math.round((totalPrice / qty) * 100) / 100;
+        for (let i = 0; i < qty; i++) {
+          const id = db.ref().push().key;
+          updates["items/" + id] = { name: label, price: unitPrice, assignedTo: {} };
+          itemCount++;
+        }
+        return;
+      }
+    }
+
     // matches "Name - $12.34", "Name: 12.34", "Name 12.34", etc.
     const match = line.match(/^(.+?)[\s:\-–—]+\$?\s*([\d,]+\.\d{1,2}|\d+)\s*$/);
     if (!match) return;
