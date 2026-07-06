@@ -136,6 +136,21 @@
   .owe-summary-row .amt-collected { color: #6FAE7C; font-family: 'Space Mono', monospace; font-weight: 700; }
   .owe-summary-row .amt-remaining { color: #C1443C; font-family: 'Space Mono', monospace; }
   .owe-summary-row .amt-total { font-family: 'Space Mono', monospace; }
+
+  .history-entry { background: #24211E; border: 1px solid #3B3732; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .history-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; list-style: none; }
+  .history-summary::-webkit-details-marker { display: none; }
+  .history-summary::marker { content: ""; }
+  .history-merchant { font-weight: 600; font-size: 13.5px; }
+  .history-date { font-size: 11.5px; color: #8A8272; }
+  .history-amt { font-family: 'Space Mono', monospace; font-size: 13px; }
+  .history-amt.settled { color: #6FAE7C; }
+  .history-amt.open { color: #C1443C; }
+  .history-body { padding: 0 12px 12px; border-top: 1px dashed #3B3732; font-size: 12.5px; }
+  .history-item-row { display: flex; justify-content: space-between; color: #A9A296; padding: 4px 0; }
+  .history-item-row span:last-child { font-family: 'Space Mono', monospace; }
+  .history-person-row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .history-empty { color: #8A8272; font-size: 13px; text-align: center; padding: 8px 0; }
   .owe-name { font-weight: 600; }
   .owe-arrow { color: #A9A296; font-size: 12px; flex: 1; }
   .owe-amount { font-family: 'Space Mono', monospace; font-weight: 700; color: #FBF8F1; }
@@ -201,6 +216,12 @@
     <div class="owe-summary" id="oweSummary"></div>
   </div>
 
+  <div class="card">
+    <div class="h2">Past receipts</div>
+    <input class="input" id="historySearch" placeholder="Search by place or date..." style="width:100%; margin-bottom:12px;" oninput="renderHistory()"/>
+    <div id="historyList"></div>
+  </div>
+
   <div class="status-line" id="statusLine">connecting…</div>
 </div>
 
@@ -248,7 +269,7 @@ function copyLink() {
 let myId = localStorage.getItem("rs_myid_" + roomId) || null;
 
 const roomRef = db.ref("rooms/" + roomId);
-let state = { merchant: "", items: {}, people: {}, payerId: "", charges: { tax: 0, tip: 0 }, paid: {} };
+let state = { merchant: "", items: {}, people: {}, payerId: "", charges: { tax: 0, tip: 0 }, paid: {}, history: {} };
 
 roomRef.on("value", (snap) => {
   const val = snap.val() || {};
@@ -259,6 +280,7 @@ roomRef.on("value", (snap) => {
     payerId: val.payerId || "",
     charges: val.charges || { tax: 0, tip: 0 },
     paid: val.paid || {},
+    history: val.history || {},
   };
 
   // Edris is always the payer — seed him in if he's not there yet
@@ -315,8 +337,45 @@ function addItem() {
 }
 
 function startNewReceipt() {
-  if (!confirm("Clear the current items, tax/tip, and paid status for a new receipt? Everyone's names stay.")) return;
+  if (Object.keys(state.items).length === 0) {
+    // nothing to save, just clear
+    roomRef.update({ merchant: "", items: null, charges: { tax: 0, tip: 0 }, paid: null });
+    return;
+  }
+  if (!confirm("Save this receipt to history and start a new one? Everyone's names stay.")) return;
+
+  const { perPerson } = computeSummary();
+  const payer = state.people[state.payerId];
+  const itemsSnapshot = Object.values(state.items).map((it) => {
+    const assignedNames = Object.keys(it.assignedTo || {})
+      .filter((k) => it.assignedTo[k])
+      .map((pid) => (state.people[pid] ? state.people[pid].name : "Unknown"));
+    return { name: it.name || "Item", price: parseFloat(it.price) || 0, assignedNames };
+  });
+  const peopleSummary = {};
+  Object.entries(state.people).forEach(([pid, p]) => {
+    if (pid === state.payerId) return;
+    peopleSummary[p.name] = { amount: perPerson[pid] || 0, paid: !!state.paid[pid] };
+  });
+  const totalOwed = Object.values(peopleSummary).reduce((s, x) => s + x.amount, 0);
+  const totalCollected = Object.values(peopleSummary).filter((x) => x.paid).reduce((s, x) => s + x.amount, 0);
+
+  const entry = {
+    date: new Date().toISOString(),
+    merchant: state.merchant || "Receipt",
+    items: itemsSnapshot,
+    tax: state.charges.tax || 0,
+    tip: state.charges.tip || 0,
+    payerName: payer ? payer.name : "",
+    people: peopleSummary,
+    totalOwed,
+    totalCollected,
+    totalRemaining: totalOwed - totalCollected,
+  };
+  const historyId = db.ref().push().key;
+
   roomRef.update({
+    ["history/" + historyId]: entry,
     merchant: "",
     items: null,
     charges: { tax: 0, tip: 0 },
@@ -557,6 +616,63 @@ function render() {
       `;
     }
   }
+
+  renderHistory();
+}
+
+function renderHistory() {
+  const container = document.getElementById("historyList");
+  const query = (document.getElementById("historySearch").value || "").trim().toLowerCase();
+  const entries = Object.entries(state.history || {}).sort((a, b) => (b[1].date || "").localeCompare(a[1].date || ""));
+
+  const filtered = entries.filter(([id, e]) => {
+    if (!query) return true;
+    const merchant = (e.merchant || "").toLowerCase();
+    const dateStr = e.date ? new Date(e.date).toLocaleDateString().toLowerCase() : "";
+    return merchant.includes(query) || dateStr.includes(query);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="history-empty">${entries.length === 0 ? "No past receipts yet." : "No matches."}</div>`;
+    return;
+  }
+
+  container.innerHTML = "";
+  filtered.forEach(([id, e]) => {
+    const isSettled = (e.totalRemaining || 0) <= 0.005;
+    const dateLabel = e.date ? new Date(e.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
+    const wrap = document.createElement("details");
+    wrap.className = "history-entry";
+    const itemsHtml = (e.items || []).map((it) => `
+      <div class="history-item-row">
+        <span>${escapeHtml(it.name)}${it.assignedNames && it.assignedNames.length ? " · " + it.assignedNames.map(escapeHtml).join(", ") : ""}</span>
+        <span>$${(it.price || 0).toFixed(2)}</span>
+      </div>
+    `).join("");
+    const peopleHtml = Object.entries(e.people || {}).map(([name, info]) => `
+      <div class="history-person-row">
+        <span>${escapeHtml(name)}</span>
+        <span style="color:${info.paid ? "#6FAE7C" : "#C1443C"}">${info.paid ? "Paid" : "Owed"} $${(info.amount || 0).toFixed(2)}</span>
+      </div>
+    `).join("");
+    wrap.innerHTML = `
+      <summary class="history-summary">
+        <span>
+          <div class="history-merchant">${escapeHtml(e.merchant || "Receipt")}</div>
+          <div class="history-date">${dateLabel}</div>
+        </span>
+        <span class="history-amt ${isSettled ? "settled" : "open"}">${isSettled ? "Settled" : "$" + (e.totalRemaining || 0).toFixed(2) + " left"}</span>
+      </summary>
+      <div class="history-body">
+        ${itemsHtml}
+        <div class="history-item-row"><span>Tax</span><span>$${(e.tax || 0).toFixed(2)}</span></div>
+        <div class="history-item-row"><span>Tip</span><span>$${(e.tip || 0).toFixed(2)}</span></div>
+        <div style="border-top:1px dashed #3B3732; margin:8px 0;"></div>
+        ${peopleHtml}
+      </div>
+    `;
+    container.appendChild(wrap);
+  });
 }
 
 function escapeHtml(s) {
