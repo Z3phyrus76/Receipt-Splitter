@@ -129,6 +129,13 @@
 
   .warning { font-size: 12.5px; color: #E8B14A; background: rgba(232,177,74,.1); border: 1px solid rgba(232,177,74,.3); padding: 8px 10px; border-radius: 8px; margin-bottom: 12px; }
   .owe-row { display: flex; align-items: center; gap: 8px; font-size: 13.5px; background: #24211E; border: 1px solid #3B3732; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+
+  .owe-summary { margin-top: 6px; padding-top: 12px; border-top: 1px dashed #3B3732; }
+  .owe-summary-row { display: flex; justify-content: space-between; font-size: 13px; color: #A9A296; margin-bottom: 4px; }
+  .owe-summary-row.remaining { color: #FBF8F1; font-weight: 700; font-size: 14.5px; margin-top: 4px; }
+  .owe-summary-row .amt-collected { color: #6FAE7C; font-family: 'Space Mono', monospace; font-weight: 700; }
+  .owe-summary-row .amt-remaining { color: #C1443C; font-family: 'Space Mono', monospace; }
+  .owe-summary-row .amt-total { font-family: 'Space Mono', monospace; }
   .owe-name { font-weight: 600; }
   .owe-arrow { color: #A9A296; font-size: 12px; flex: 1; }
   .owe-amount { font-family: 'Space Mono', monospace; font-weight: 700; color: #FBF8F1; }
@@ -168,6 +175,9 @@
     <textarea class="paste-box" id="pasteBox" placeholder="Paste items here..."></textarea>
     <button class="btn btn-primary btn-small" onclick="parsePastedItems()">Add to receipt</button>
     <div class="paste-status" id="pasteStatus"></div>
+    <div style="margin-top:14px; padding-top:14px; border-top:1px solid #3B3732;">
+      <button class="btn btn-ghost btn-small" onclick="startNewReceipt()">Start new receipt</button>
+    </div>
   </div>
 
   <div class="receipt-wrap">
@@ -188,6 +198,7 @@
   <div class="card">
     <div id="warningBox"></div>
     <div id="oweList"></div>
+    <div class="owe-summary" id="oweSummary"></div>
   </div>
 
   <div class="status-line" id="statusLine">connecting…</div>
@@ -301,6 +312,16 @@ function setCharge(key, val) {
 function addItem() {
   const id = db.ref().push().key;
   roomRef.child("items/" + id).set({ name: "", price: 0, assignedTo: {} });
+}
+
+function startNewReceipt() {
+  if (!confirm("Clear the current items, tax/tip, and paid status for a new receipt? Everyone's names stay.")) return;
+  roomRef.update({
+    merchant: "",
+    items: null,
+    charges: { tax: 0, tip: 0 },
+    paid: null,
+  });
 }
 
 function parsePastedItems() {
@@ -487,12 +508,18 @@ function render() {
 
   const oweList = document.getElementById("oweList");
   oweList.innerHTML = "";
+  const oweSummary = document.getElementById("oweSummary");
+  oweSummary.innerHTML = "";
   const payer = state.people[state.payerId];
   if (payer) {
+    let totalOwed = 0;
+    let totalCollected = 0;
     Object.entries(state.people).forEach(([pid, p]) => {
       if (pid === state.payerId) return;
       const amount = perPerson[pid] || 0;
       const isPaid = !!state.paid[pid];
+      totalOwed += amount;
+      if (isPaid) totalCollected += amount;
       const row = document.createElement("div");
       row.className = "owe-row";
       row.innerHTML = `
@@ -504,6 +531,14 @@ function render() {
       `;
       oweList.appendChild(row);
     });
+    const totalRemaining = totalOwed - totalCollected;
+    if (Object.keys(state.people).length > 1) {
+      oweSummary.innerHTML = `
+        <div class="owe-summary-row"><span>Total owed</span><span class="amt-total">$${totalOwed.toFixed(2)}</span></div>
+        <div class="owe-summary-row"><span>Collected so far</span><span class="amt-collected">$${totalCollected.toFixed(2)}</span></div>
+        <div class="owe-summary-row remaining"><span>Still owed to ${escapeHtml(payer.name)}</span><span class="amt-remaining">$${totalRemaining.toFixed(2)}</span></div>
+      `;
+    }
   }
 }
 
