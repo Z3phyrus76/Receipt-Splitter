@@ -669,10 +669,59 @@ function renderHistory() {
         <div class="history-item-row"><span>Tip</span><span>$${(e.tip || 0).toFixed(2)}</span></div>
         <div style="border-top:1px dashed #3B3732; margin:8px 0;"></div>
         ${peopleHtml}
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn btn-ghost btn-small" onclick="restoreReceipt('${id}')">Restore as active</button>
+          <button class="btn btn-ghost btn-small" onclick="deleteHistoryEntry('${id}')">Delete</button>
+        </div>
       </div>
     `;
     container.appendChild(wrap);
   });
+}
+
+function restoreReceipt(historyId) {
+  const entry = state.history[historyId];
+  if (!entry) return;
+  if (Object.keys(state.items).length > 0) {
+    if (!confirm("This will replace the current active receipt with this one. Continue?")) return;
+  } else {
+    if (!confirm("Restore this receipt as the active one?")) return;
+  }
+
+  // map names back to current person IDs where possible
+  const nameToId = {};
+  Object.entries(state.people).forEach(([pid, p]) => {
+    nameToId[p.name.toLowerCase()] = pid;
+  });
+
+  const items = {};
+  (entry.items || []).forEach((it) => {
+    const id = db.ref().push().key;
+    const assignedTo = {};
+    (it.assignedNames || []).forEach((name) => {
+      const pid = nameToId[(name || "").toLowerCase()];
+      if (pid) assignedTo[pid] = true;
+    });
+    items[id] = { name: it.name || "", price: it.price || 0, assignedTo };
+  });
+
+  const paid = {};
+  Object.entries(entry.people || {}).forEach(([name, info]) => {
+    const pid = nameToId[(name || "").toLowerCase()];
+    if (pid && info.paid) paid[pid] = true;
+  });
+
+  roomRef.update({
+    merchant: entry.merchant || "",
+    items,
+    charges: { tax: entry.tax || 0, tip: entry.tip || 0 },
+    paid,
+  });
+}
+
+function deleteHistoryEntry(historyId) {
+  if (!confirm("Delete this past receipt permanently?")) return;
+  roomRef.child("history/" + historyId).remove();
 }
 
 function escapeHtml(s) {
