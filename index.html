@@ -349,7 +349,10 @@ function startNewReceipt(shouldSave) {
     roomRef.update({ merchant: "", items: null, charges: { tax: 0, tip: 0 }, paid: null });
     return;
   }
-  if (!confirm("Save this receipt to history and start a new one? Everyone's names stay.")) return;
+
+  const nameInput = prompt("Name this receipt:", state.merchant || "");
+  if (nameInput === null) return; // cancelled
+  const receiptName = nameInput.trim() || "Receipt";
 
   const { perPerson } = computeSummary();
   const payer = state.people[state.payerId];
@@ -369,7 +372,7 @@ function startNewReceipt(shouldSave) {
 
   const entry = {
     date: new Date().toISOString(),
-    merchant: state.merchant || "Receipt",
+    merchant: receiptName,
     items: itemsSnapshot,
     tax: state.charges.tax || 0,
     tip: state.charges.tip || 0,
@@ -676,8 +679,9 @@ function renderHistory() {
         <div class="history-item-row"><span>Tip</span><span>$${(e.tip || 0).toFixed(2)}</span></div>
         <div style="border-top:1px dashed #3B3732; margin:8px 0;"></div>
         ${peopleHtml}
-        <div style="display:flex; gap:8px; margin-top:12px;">
+        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
           <button class="btn btn-ghost btn-small" onclick="restoreReceipt('${id}')">Restore as active</button>
+          <button class="btn btn-ghost btn-small" onclick="renameHistoryEntry('${id}')">Rename</button>
           <button class="btn btn-ghost btn-small" onclick="deleteHistoryEntry('${id}')">Delete</button>
         </div>
       </div>
@@ -724,6 +728,16 @@ function restoreReceipt(historyId) {
     charges: { tax: entry.tax || 0, tip: entry.tip || 0 },
     paid,
   });
+}
+
+function renameHistoryEntry(historyId) {
+  const entry = state.history[historyId];
+  if (!entry) return;
+  const newName = prompt("Rename this receipt:", entry.merchant || "");
+  if (newName === null) return; // cancelled
+  const trimmed = newName.trim();
+  if (!trimmed) return;
+  roomRef.child("history/" + historyId + "/merchant").set(trimmed);
 }
 
 function deleteHistoryEntry(historyId) {
